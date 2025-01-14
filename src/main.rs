@@ -1,20 +1,20 @@
-mod commands;
 use poise::serenity_prelude as serenity;
-use std::{
-    sync::Arc,
-    time::Duration,
-};
+use std::{sync::Arc, time::Duration};
 mod utils;
-use crate::utils::config::Config;
+use crate::utils::agencies::get_all as get_agencies;
 use crate::utils::agencies::Agency;
 use crate::utils::config::get as get_config;
+use crate::utils::config::Config;
 use crate::utils::secrets::get as get_secrets;
-use crate::utils::agencies::get_all as get_agencies;
+
+mod commands;
+mod dev_commands;
 
 // Types used by all command functions
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
 // Custom user data passed to all command functions
+
 pub struct Data {
     pub config: Config,
     pub agencies: Vec<Agency>,
@@ -47,18 +47,18 @@ async fn main() {
     // Every option can be omitted to use its default value
     let options = poise::FrameworkOptions {
         // this is a list of all commands from the commands.rs file
-        commands: vec![commands::help(), commands::track(), commands::about()],
+        commands: vec![
+            commands::help(),
+            commands::track(),
+            commands::about(), // Public commands
+            dev_commands::dev(),
+        ], // dev only commands (subcommands are NOT included because then they would be runnable on their own)
         prefix_options: poise::PrefixFrameworkOptions {
             prefix: Some(config.prefix.clone()),
             // tracks messages that are edited within the last hour
             edit_tracker: Some(Arc::new(poise::EditTracker::for_timespan(
                 Duration::from_secs(3600),
             ))),
-            additional_prefixes: vec![
-                // funny alternate prefixes that are pointless
-                poise::Prefix::Literal("hey trackr,"),
-                poise::Prefix::Literal("hey trackr"),
-            ],
             ..Default::default()
         },
         // The global error handler for all error cases that may occur
@@ -98,21 +98,16 @@ async fn main() {
         },
         ..Default::default()
     };
-
     let framework = poise::Framework::builder()
         .setup(move |ctx, _ready, framework| {
             Box::pin(async move {
                 println!("Logged in as {}", _ready.user.name);
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
-                Ok(Data {
-                    config,
-                    agencies,
-                })
+                Ok(Data { config, agencies })
             })
         })
         .options(options)
         .build();
-    
     let secrets = get_secrets();
     let token = secrets.token;
     let intents =

@@ -6,14 +6,16 @@ const DESCRIPTION: &str = env!("CARGO_PKG_DESCRIPTION");
 use crate::utils::agencies::get as get_agency;
 
 /// Show this help menu
-#[poise::command(prefix_command, track_edits, slash_command)]
+#[poise::command(prefix_command, track_edits, slash_command, category = "Misc")]
 pub async fn help(
     ctx: Context<'_>,
     #[description = "The command to show help about"]
     #[autocomplete = "poise::builtins::autocomplete_command"]
     command: Option<String>, // the command argument (string)
-) -> Result<(), Error> { // this is the result of the command (what happens when it's called)
-    poise::builtins::help( // this help function is builtin to poise
+) -> Result<(), Error> {
+    // this is the result of the command (what happens when it's called)
+    poise::builtins::help(
+        // this help function is builtin to poise
         ctx,
         command.as_deref(),
         poise::builtins::HelpConfiguration {
@@ -25,8 +27,8 @@ pub async fn help(
     Ok(())
 }
 
-// Information about Trackr
-#[poise::command(prefix_command, track_edits, slash_command)]
+/// Information about Trackr
+#[poise::command(prefix_command, track_edits, slash_command, category = "Misc")]
 pub async fn about(ctx: Context<'_>) -> Result<(), Error> {
     let about: String = format!("Trackr v{}, created by @averwhy
 {} Track subways, busses, regional rail, and more.
@@ -45,24 +47,40 @@ For a list of available commands, type `/help` or `=help` (both text and slash c
     Ok(())
 }
 
-// Track a transit agency
-#[poise::command(prefix_command, track_edits, slash_command)]
+/// Shows server count
+#[poise::command(prefix_command, category = "Misc")]
+pub async fn servers(ctx: Context<'_>) -> Result<(), Error> {
+    let guilds = ctx.cache().guilds().len();
+    poise::send_reply(ctx, poise::CreateReply::default().content(format!("I'm in {guilds} servers!"))).await?;
+    Ok(())
+}
+
+/// Track a transit agency
+#[poise::command(prefix_command, track_edits, slash_command, category = "Tracking")]
 pub async fn track(
     ctx: Context<'_>,
-    #[description = "The name of the transit agency to check the status of"]
-    agency_name: String,
+    #[description = "The name of the transit agency to check the status of"] agency_name: String,
 ) -> Result<(), Error> {
     let agency_name_upper = agency_name.to_uppercase();
-    // match agency with user input
     let Some(agency) = get_agency(agency_name_upper) else {
-        poise::send_reply(ctx, poise::CreateReply::default().ephemeral(false)
-        .content(format!("Could not find agency `{}`", agency_name))).await?;
+        poise::send_reply(
+            ctx,
+            poise::CreateReply::default()
+                .ephemeral(false)
+                .content(format!("Could not find agency `{}`", agency_name)),
+        )
+        .await?;
         return Ok(());
     };
-
-    poise::send_reply(ctx, poise::CreateReply::default().ephemeral(false).content
-        (format!("Pretending to track {}\nVisit them at {}", agency.name, agency.url))
-    ).await?;
-
+    poise::send_reply(
+        ctx,
+        poise::CreateReply::default()
+            .ephemeral(false)
+            .content(format!(
+                "Pretending to track {}\nVisit them at {}",
+                agency.name, agency.url
+            )),
+    )
+    .await?;
     Ok(())
 }

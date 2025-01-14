@@ -7,4 +7,4 @@ RUN cargo build
 
 COPY src ./src
 
-CMD ["python", "bot.py"]
+CMD ["cargo", "run"]

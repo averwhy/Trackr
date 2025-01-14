@@ -1,0 +1,20 @@
+{
+    "prefix": "#",
+    "agencies": {
+        "MBTA": {
+            "name": "Massachusetts Bay Transportation Authority",
+            "url": "https://mbta.com",
+            "api_url": "https://api-v3.mbta.com"
+        },
+        "CTA": {
+            "name": "Chicago Transit Authority",
+            "url": "https://www.transitchicago.com",
+            "api_url": "http://www.transitchicago.com/api/1.0"
+        },
+        "MTA": {
+            "name": "Metropolitan Transportation Authority",
+            "url": "http://new.mta.info",
+            "api_url": ""
+        }
+    }
+}

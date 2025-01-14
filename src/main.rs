@@ -1,51 +1,23 @@
-#![warn(clippy::str_to_string)]
-
 mod commands;
-
 use poise::serenity_prelude as serenity;
 use std::{
-    collections::HashMap,
-    env::var,
     sync::Arc,
     time::Duration,
 };
-
-// get json data from config.json
-use serde::Deserialize;
-use serde::Serialize;
-use std::fs::File;
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Config {
-  pub prefix: String,
-  pub agencies: HashMap<String, Agency>,
-}
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Agency{
-    pub name: String,
-    pub url: String,
-    pub api_url: String
-}
-fn get_config() -> Config {
-    let file = File::open("config.json").expect("file should open read only");
-    return serde_json::from_reader(file).expect("file should be proper JSON")
-}
-#[derive(Debug, Clone, Deserialize, Serialize)]
-struct Secrets {
-    token: String
-}
-fn get_secrets() -> Secrets {
-    let file = File::open("secrets.json").expect("file should open read only");
-    return serde_json::from_reader(file).expect("file should be proper JSON")
-}
+mod utils;
+use crate::utils::config::Config;
+use crate::utils::agencies::Agency;
+use crate::utils::config::get as get_config;
+use crate::utils::secrets::get as get_secrets;
+use crate::utils::agencies::get_all as get_agencies;
 
 // Types used by all command functions
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
-
 // Custom user data passed to all command functions
 pub struct Data {
     pub config: Config,
+    pub agencies: Vec<Agency>,
 }
 
 async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
@@ -69,12 +41,13 @@ async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
 async fn main() {
     tracing_subscriber::fmt::init();
     let config = get_config();
+    let agencies = get_agencies();
 
     // FrameworkOptions contains all of poise's configuration option in one struct
     // Every option can be omitted to use its default value
     let options = poise::FrameworkOptions {
         // this is a list of all commands from the commands.rs file
-        commands: vec![commands::help(), commands::track()],
+        commands: vec![commands::help(), commands::track(), commands::about()],
         prefix_options: poise::PrefixFrameworkOptions {
             prefix: Some(config.prefix.clone()),
             // tracks messages that are edited within the last hour
@@ -133,6 +106,7 @@ async fn main() {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 Ok(Data {
                     config,
+                    agencies,
                 })
             })
         })
@@ -142,8 +116,7 @@ async fn main() {
     let secrets = get_secrets();
     let token = secrets.token;
     let intents =
-        serenity::GatewayIntents::non_privileged();
-
+        serenity::GatewayIntents::non_privileged() | serenity::GatewayIntents::MESSAGE_CONTENT;
     let client = serenity::ClientBuilder::new(token, intents)
         .framework(framework)
         .await;

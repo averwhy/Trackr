@@ -1,11 +1,15 @@
 use crate::{Context, Error};
 const VERSION: &str = env!("CARGO_PKG_VERSION");
+#[allow(dead_code)]
+const DESCRIPTION: &str = env!("CARGO_PKG_DESCRIPTION");
+
+use crate::utils::agencies::get as get_agency;
 
 /// Show this help menu
 #[poise::command(prefix_command, track_edits, slash_command)]
 pub async fn help(
     ctx: Context<'_>,
-    #[description = "Specific command to show help about"]
+    #[description = "The command to show help about"]
     #[autocomplete = "poise::builtins::autocomplete_command"]
     command: Option<String>, // the command argument (string)
 ) -> Result<(), Error> { // this is the result of the command (what happens when it's called)
@@ -21,18 +25,36 @@ pub async fn help(
     Ok(())
 }
 
+// Information about Trackr
+#[poise::command(prefix_command, track_edits, slash_command)]
+pub async fn about(ctx: Context<'_>) -> Result<(), Error> {
+    let about: String = format!("Trackr v{}, created by @averwhy
+{} Track subways, busses, regional rail, and more.
+*Please note that Trackr is under active development and is not fully functional.*
+The current scope of the bot is: ```md
+<On Release (v1.0.0)>
+- Check status of transit agencies (regional rail, subway/lrt, brt)
+- When a command like '/track mbta red' is ran, it will reply with an embed that will be regularly updated with the red lines status. it would also work with like '/track mbta orange NorthStation', except with stations it would show the expected arrival times for that line
+<After release/in the future>
+- Ability to track Amtrak lines
+- Ability to track individual amtrak trains, and recieve notifications about train updates/station arrivals
+```
+For a list of available commands, type `/help` or `=help` (both text and slash commands are supported)."
+    , VERSION, DESCRIPTION);
+    poise::send_reply(ctx, poise::CreateReply::default().content(about)).await?;
+    Ok(())
+}
+
+// Track a transit agency
 #[poise::command(prefix_command, track_edits, slash_command)]
 pub async fn track(
     ctx: Context<'_>,
     #[description = "The name of the transit agency to check the status of"]
     agency_name: String,
 ) -> Result<(), Error> {
-    // access config from Data
-    let config = &ctx.data().config;
-    let agencies = &config.agencies;
     let agency_name_upper = agency_name.to_uppercase();
     // match agency with user input
-    let Some(agency) = agencies.get(&agency_name_upper) else {
+    let Some(agency) = get_agency(agency_name_upper) else {
         poise::send_reply(ctx, poise::CreateReply::default().ephemeral(false)
         .content(format!("Could not find agency `{}`", agency_name))).await?;
         return Ok(());

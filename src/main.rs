@@ -7,6 +7,8 @@ use crate::utils::config::get as get_config;
 use crate::utils::config::Config;
 use crate::utils::secrets::get as get_secrets;
 
+use crate::utils::apis::mbta::MBTA;
+
 mod commands;
 mod dev_commands;
 
@@ -18,6 +20,7 @@ type Context<'a> = poise::Context<'a, Data, Error>;
 pub struct Data {
     pub config: Config,
     pub agencies: Vec<Agency>,
+    pub mbta: MBTA,
 }
 
 async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
@@ -48,10 +51,11 @@ async fn main() {
     let options = poise::FrameworkOptions {
         // this is a list of all commands from the commands.rs file
         commands: vec![
-            commands::help(),
+            commands::help(), // Public commands \/
             commands::track(),
-            commands::about(), // Public commands
-            dev_commands::dev(),
+            commands::about(), 
+            dev_commands::dev(), // Dev commands \/
+            dev_commands::mbta()
         ], // dev only commands (subcommands are NOT included because then they would be runnable on their own)
         prefix_options: poise::PrefixFrameworkOptions {
             prefix: Some(config.prefix.clone()),
@@ -76,11 +80,11 @@ async fn main() {
             })
         },
         // Every command invocation must pass this check to continue execution
-        command_check: Some(|ctx| {
+        command_check: Some(|_ctx| {
             Box::pin(async move {
-                if ctx.author().id == 123456789 {
-                    return Ok(false);
-                }
+                // if ctx.author().id == 123456789 {
+                //     return Ok(false);
+                // }
                 Ok(true)
             })
         }),
@@ -98,17 +102,17 @@ async fn main() {
         },
         ..Default::default()
     };
+    let secrets = get_secrets();
     let framework = poise::Framework::builder()
         .setup(move |ctx, _ready, framework| {
             Box::pin(async move {
                 println!("Logged in as {}", _ready.user.name);
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
-                Ok(Data { config, agencies })
+                Ok(Data { config, agencies, mbta: MBTA::new(secrets.mbta_api_key) })
             })
         })
         .options(options)
         .build();
-    let secrets = get_secrets();
     let token = secrets.token;
     let intents =
         serenity::GatewayIntents::non_privileged() | serenity::GatewayIntents::MESSAGE_CONTENT;

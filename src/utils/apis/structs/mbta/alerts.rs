@@ -1,6 +1,33 @@
 use serde::Deserialize;
 use serde::Serialize;
 
+pub struct Alerts{
+    pub total_count: i32,
+    pub important_count: i32,
+    pub important_alerts: Vec<Daum>
+}
+
+impl Alerts {
+    pub fn new(data: Root) -> Self {
+        let important_alerts: Vec<Daum> = data.data.iter().filter(|alert| {
+            alert.attributes.as_ref().unwrap().informed_entity.as_ref().unwrap().iter().any(|entity| {
+                // Checking if there is a subway line inside of the alerts, and making sure its not regular maintenance
+                (
+                    entity.route.as_ref().unwrap().contains("Red") ||
+                    entity.route.as_ref().unwrap().contains("Orange") ||
+                    entity.route.as_ref().unwrap().contains("Blue") ||
+                    entity.route.as_ref().unwrap().contains("Green") ||
+                    entity.route.as_ref().unwrap().contains("Silver")
+                ) &&
+                !alert.attributes.as_ref().unwrap().cause.as_ref().unwrap().contains("MAINTENANCE")
+            })
+        }).cloned().collect();
+        let total_count = data.data.len() as i32;
+        let important_count = important_alerts.len() as i32;
+        Self { total_count, important_count, important_alerts }
+    }
+}
+
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Root {
     pub links: Option<Links>,

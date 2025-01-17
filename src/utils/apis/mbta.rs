@@ -1,7 +1,7 @@
 use reqwest;
 use serde_json::from_str;
 use crate::Error;
-use crate::utils::apis::structs::mbta_data;
+use crate::utils::apis::structs::mbta::alerts;
 
 pub struct MBTA{
     http: reqwest::Client,
@@ -17,7 +17,7 @@ impl MBTA {
         Self { http: http_client, url: url.to_string() }
     }
 
-    pub async fn get_alerts(&self) -> Result<mbta_data::Root, Error> {
+    pub async fn get_alerts(&self) -> Result<alerts::Alerts, Error> {
         let response = self.http
             .get(format!("{}/alerts", self.url))
             .send()
@@ -25,9 +25,10 @@ impl MBTA {
             .text()
             .await?;
         
-        dbg!(response[115..135].to_string());
-
-        let alerts: mbta_data::Root = from_str(&response)?;
+        dbg!(response.to_string());
+        
+        let parsed_alerts: alerts::Root = from_str(&response)?;
+        let alerts = alerts::Alerts::new(parsed_alerts);
         Ok(alerts)
     }
 }

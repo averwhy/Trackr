@@ -45,9 +45,8 @@ pub async fn mbta(_ctx: Context<'_>) -> Result<(), Error> {
 #[poise::command(prefix_command, track_edits, owners_only, hide_in_help)]
 pub async fn alerts(ctx: Context<'_>) -> Result<(), Error> {
     let alerts = ctx.data().mbta.get_alerts().await?;
-    let data = alerts.data;
     ctx.send(CreateReply::default().content(
-        format!("Number of alerts: {}", data.len())
+        format!("Number of alerts: {}", alerts.important_count)
     )).await?;
     Ok(())
 }

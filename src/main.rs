@@ -53,9 +53,9 @@ async fn main() {
         commands: vec![
             commands::help(), // Public commands \/
             commands::track(),
-            commands::about(), 
+            commands::about(),
             dev_commands::dev(), // Dev commands \/
-            dev_commands::mbta()
+            dev_commands::mbta(),
         ], // dev only commands (subcommands are NOT included because then they would be runnable on their own)
         prefix_options: poise::PrefixFrameworkOptions {
             prefix: Some(config.prefix.clone()),
@@ -108,7 +108,11 @@ async fn main() {
             Box::pin(async move {
                 println!("Logged in as {}", _ready.user.name);
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
-                Ok(Data { config, agencies, mbta: MBTA::new(secrets.mbta_api_key) })
+                Ok(Data {
+                    config,
+                    agencies,
+                    mbta: MBTA::new(secrets.mbta_api_key),
+                })
             })
         })
         .options(options)

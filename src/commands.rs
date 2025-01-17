@@ -51,7 +51,11 @@ For a list of available commands, type `/help` or `=help` (both text and slash c
 #[poise::command(prefix_command, category = "Misc")]
 pub async fn servers(ctx: Context<'_>) -> Result<(), Error> {
     let guilds = ctx.cache().guilds().len();
-    poise::send_reply(ctx, poise::CreateReply::default().content(format!("I'm in {guilds} servers!"))).await?;
+    poise::send_reply(
+        ctx,
+        poise::CreateReply::default().content(format!("I'm in {guilds} servers!")),
+    )
+    .await?;
     Ok(())
 }
 

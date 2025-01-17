@@ -15,7 +15,13 @@ pub async fn dev(_ctx: Context<'_>) -> Result<(), Error> {
 }
 
 /// Stops the bot by shutting down all shards
-#[poise::command(prefix_command, track_edits, owners_only, hide_in_help, category = "Dev")]
+#[poise::command(
+    prefix_command,
+    track_edits,
+    owners_only,
+    hide_in_help,
+    category = "Dev"
+)]
 pub async fn stop(ctx: Context<'_>) -> Result<(), Error> {
     if let Context::Prefix(ctx) = ctx {
         // this if statement has to be here because of the way rust works
@@ -45,8 +51,9 @@ pub async fn mbta(_ctx: Context<'_>) -> Result<(), Error> {
 #[poise::command(prefix_command, track_edits, owners_only, hide_in_help)]
 pub async fn alerts(ctx: Context<'_>) -> Result<(), Error> {
     let alerts = ctx.data().mbta.get_alerts().await?;
-    ctx.send(CreateReply::default().content(
-        format!("Number of alerts: {}", alerts.important_count)
-    )).await?;
+    ctx.send(
+        CreateReply::default().content(format!("Number of alerts: {}", alerts.important_count)),
+    )
+    .await?;
     Ok(())
 }

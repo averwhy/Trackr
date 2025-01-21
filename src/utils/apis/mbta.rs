@@ -1,4 +1,5 @@
 use crate::utils::apis::structs::mbta::alerts;
+use crate::utils::apis::structs::mbta::lines;
 use crate::Error;
 use reqwest;
 use serde_json::from_str;
@@ -41,5 +42,19 @@ impl MBTA {
         let parsed_alerts: alerts::Root = from_str(&response)?;
         let alerts = alerts::Alerts::new(parsed_alerts);
         Ok(alerts)
+    }
+
+    pub async fn get_lines(&self) -> Result<lines::Lines, Error> {
+        let response = self
+            .http
+            .get(format!("{}/lines", self.url))
+            .send()
+            .await?
+            .text()
+            .await?;
+
+        let parsed_lines: lines::Root = from_str(&response)?;
+        let lines = lines::Lines::new(parsed_lines);
+        Ok(lines)
     }
 }

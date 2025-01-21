@@ -41,18 +41,29 @@ pub async fn stop(ctx: Context<'_>) -> Result<(), Error> {
     owners_only,
     hide_in_help,
     subcommand_required,
-    subcommands("alerts")
+    subcommands("alerts", "lines")
 )]
 pub async fn mbta(_ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-/// Stops the bot by shutting down all shards
+/// Gets alerts data from the MBTA API
 #[poise::command(prefix_command, track_edits, owners_only, hide_in_help)]
 pub async fn alerts(ctx: Context<'_>) -> Result<(), Error> {
     let alerts = ctx.data().mbta.get_alerts().await?;
     ctx.send(
         CreateReply::default().content(format!("Number of alerts: {}", alerts.important_count)),
+    )
+    .await?;
+    Ok(())
+}
+
+/// Gets lines data from the MBTA API
+#[poise::command(prefix_command, track_edits, owners_only, hide_in_help)]
+pub async fn lines(ctx: Context<'_>) -> Result<(), Error> {
+    let lines = ctx.data().mbta.get_lines().await?;
+    ctx.send(
+        CreateReply::default().content(format!("Number of lines: {}", lines.count)),
     )
     .await?;
     Ok(())

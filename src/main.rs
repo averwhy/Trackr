@@ -54,6 +54,7 @@ async fn main() {
             commands::help(), // Public commands \/
             commands::track(),
             commands::about(),
+            commands::support(),
             dev_commands::dev(), // Dev commands \/
             dev_commands::mbta(),
         ], // dev only commands (subcommands are NOT included because then they would be runnable on their own)

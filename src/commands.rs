@@ -59,6 +59,19 @@ pub async fn servers(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
+/// Support server link
+#[poise::command(prefix_command, slash_command, category = "Misc")]
+pub async fn support(ctx: Context<'_>) -> Result<(), Error> {
+    poise::send_reply(
+        ctx,
+        poise::CreateReply::default().content(
+            "For support, ideas, foaming, and more, join our support server: discord.gg/kzZJ87WMEQ",
+        ),
+    )
+    .await?;
+    Ok(())
+}
+
 /// Track a transit agency
 #[poise::command(prefix_command, track_edits, slash_command, category = "Tracking")]
 pub async fn track(

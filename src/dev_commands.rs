@@ -51,8 +51,22 @@ pub async fn mbta(_ctx: Context<'_>) -> Result<(), Error> {
 #[poise::command(prefix_command, track_edits, owners_only, hide_in_help)]
 pub async fn alerts(ctx: Context<'_>) -> Result<(), Error> {
     let alerts = ctx.data().mbta.get_alerts().await?;
+    let subway_alert_titles: Vec<String> = alerts
+        .subway_delays
+        .iter()
+        .map(|alert| {
+            alert
+                .attributes
+                .as_ref()
+                .unwrap()
+                .short_header
+                .as_ref()
+                .unwrap()
+        })
+        .cloned()
+        .collect();
     ctx.send(
-        CreateReply::default().content(format!("Number of alerts: {}", alerts.important_count)),
+        CreateReply::default().content(format!("Number of alerts: {}\nAlert titles: {}", alerts.subway_delay_count, subway_alert_titles.join("\n"))),
     )
     .await?;
     Ok(())
@@ -62,9 +76,16 @@ pub async fn alerts(ctx: Context<'_>) -> Result<(), Error> {
 #[poise::command(prefix_command, track_edits, owners_only, hide_in_help)]
 pub async fn lines(ctx: Context<'_>) -> Result<(), Error> {
     let lines = ctx.data().mbta.get_lines().await?;
-    ctx.send(
-        CreateReply::default().content(format!("Number of lines: {}", lines.count)),
-    )
+    let subways = lines.subways;
+    let subway_names: Vec<String> = subways
+        .iter()
+        .map(|subway| subway.attributes.long_name.clone())
+        .collect();
+    ctx.send(CreateReply::default().content(format!(
+        "Number of lines: {}\nLong names: {}",
+        lines.count,
+        subway_names.join(", ")
+    )))
     .await?;
     Ok(())
 }

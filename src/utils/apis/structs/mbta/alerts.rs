@@ -3,13 +3,15 @@ use serde::Serialize;
 
 pub struct Alerts {
     pub total_count: i32,
-    pub important_count: i32,
-    pub important_alerts: Vec<Daum>,
+    pub subway_delays: Vec<Daum>,
+    pub subway_delay_count: i32,
+    pub bus_delays: Vec<Daum>,
+    pub bus_delay_count: i32,
 }
 
 impl Alerts {
     pub fn new(data: Root) -> Self {
-        let important_alerts: Vec<Daum> = data
+        let subway_delays: Vec<Daum> = data
             .data
             .iter()
             .filter(|alert| {
@@ -27,17 +29,47 @@ impl Alerts {
                             || route.contains("Blue")
                             || route.contains("Green")
                             || route.contains("Silver"))
+                            && !route.contains("Greenbush") // ignores this commuter rail line
+                            && !route.contains("Oak Grove") // ignores this bus route
                             && !alert.cause.as_ref().unwrap().contains("MAINTENANCE")
+                            && alert.effect.as_ref().unwrap().contains("DELAY")
+                    })
+            })
+            .cloned()
+            .collect();
+        let bus_delays: Vec<Daum> = data
+            .data
+            .iter()
+            .filter(|alert| {
+                let alert = alert.attributes.as_ref().unwrap();
+                alert
+                    .informed_entity
+                    .as_ref()
+                    .unwrap()
+                    .iter()
+                    .any(|entity| {
+                        // Checking if there is a 'DELAY' effect in the alert (carving out the subways)
+                        let route = entity.route.as_ref().unwrap();
+                        (!route.contains("Red")
+                            || !route.contains("Orange")
+                            || !route.contains("Blue")
+                            || !route.contains("Green")
+                            || !route.contains("Silver"))
+                            && route.contains("Oak Grove")
+                            && alert.effect.as_ref().unwrap().contains("DELAY")
                     })
             })
             .cloned()
             .collect();
         let total_count = data.data.len() as i32;
-        let important_count = important_alerts.len() as i32;
+        let subway_delay_count = subway_delays.len() as i32;
+        let bus_delay_count = bus_delays.len() as i32;
         Self {
             total_count,
-            important_count,
-            important_alerts,
+            subway_delays,
+            subway_delay_count,
+            bus_delays,
+            bus_delay_count,
         }
     }
 }

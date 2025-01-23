@@ -6,10 +6,27 @@ pub struct Lines {
     pub count: i32,
     pub long_names: Vec<String>,
     pub short_names: Vec<String>,
+    pub subways: Vec<Daum>,
 }
 
 impl Lines {
     pub fn new(data: Root) -> Self {
+        let subways: Vec<Daum> = data
+            .data
+            .iter()
+            .filter(|line| {
+                let long_name = &line.attributes.long_name;
+                (long_name.contains("Red")
+                    || long_name.contains("Orange")
+                    || long_name.contains("Blue")
+                    || long_name.contains("Green"))
+                    // make sure that there arent any stragglers
+                    && !long_name.contains("Greenbush")
+                    && !long_name.contains("Oak Grove")
+                
+            })
+            .cloned()
+            .collect();
         // get names of all lines
         let long_names: Vec<String> = data
             .data
@@ -26,6 +43,7 @@ impl Lines {
             count,
             long_names,
             short_names,
+            subways,
         }
     }
 }

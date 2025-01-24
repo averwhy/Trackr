@@ -6,7 +6,6 @@ use crate::utils::agencies::Agency;
 use crate::utils::config::get as get_config;
 use crate::utils::config::Config;
 use crate::utils::secrets::get as get_secrets;
-
 use crate::utils::apis::mbta::MBTA;
 
 mod commands;

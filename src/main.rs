@@ -1,4 +1,5 @@
 use poise::serenity_prelude as serenity;
+use utils::database::Client;
 use std::{sync::Arc, time::Duration};
 mod utils;
 use crate::utils::agencies::get_all as get_agencies;
@@ -6,7 +7,8 @@ use crate::utils::agencies::Agency;
 use crate::utils::config::get as get_config;
 use crate::utils::config::Config;
 use crate::utils::secrets::get as get_secrets;
-use crate::utils::apis::mbta::MBTA;
+
+use crate::utils::database;
 
 mod commands;
 mod dev_commands;
@@ -17,9 +19,8 @@ type Context<'a> = poise::Context<'a, Data, Error>;
 // Custom user data passed to all command functions
 
 pub struct Data {
+    pub pool: database::Client,
     pub config: Config,
-    pub agencies: Vec<Agency>,
-    pub mbta: MBTA,
 }
 
 async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
@@ -43,7 +44,7 @@ async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
 async fn main() {
     tracing_subscriber::fmt::init();
     let config = get_config();
-    let agencies = get_agencies();
+    let secrets = get_secrets();
 
     // FrameworkOptions contains all of poise's configuration option in one struct
     // Every option can be omitted to use its default value
@@ -55,7 +56,7 @@ async fn main() {
             commands::about(),
             commands::support(),
             dev_commands::dev(), // Dev commands \/
-            dev_commands::mbta(),
+            dev_commands::track(),
         ], // dev only commands (subcommands are NOT included because then they would be runnable on their own)
         prefix_options: poise::PrefixFrameworkOptions {
             prefix: Some(config.prefix.clone()),
@@ -102,16 +103,14 @@ async fn main() {
         },
         ..Default::default()
     };
-    let secrets = get_secrets();
     let framework = poise::Framework::builder()
         .setup(move |ctx, _ready, framework| {
             Box::pin(async move {
                 println!("Logged in as {}", _ready.user.name);
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 Ok(Data {
-                    config,
-                    agencies,
-                    mbta: MBTA::new(secrets.mbta_api_key),
+                    pool: Client::new().await?,
+                    config
                 })
             })
         })

@@ -34,58 +34,22 @@ pub async fn stop(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-/// MBTA API Commands testing. owner only
+/// Tracking command testing, owner only for now
 #[poise::command(
+    slash_command,
     prefix_command,
     track_edits,
     owners_only,
     hide_in_help,
-    subcommand_required,
-    subcommands("alerts", "lines")
+    subcommands("list")
 )]
-pub async fn mbta(_ctx: Context<'_>) -> Result<(), Error> {
+pub async fn track(_ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-/// Gets alerts data from the MBTA API
+/// Shows list of tracked lines or subway stations
 #[poise::command(prefix_command, track_edits, owners_only, hide_in_help)]
-pub async fn alerts(ctx: Context<'_>) -> Result<(), Error> {
-    let alerts = ctx.data().mbta.get_alerts().await?;
-    let subway_alert_titles: Vec<String> = alerts
-        .subway_delays
-        .iter()
-        .map(|alert| {
-            alert
-                .attributes
-                .as_ref()
-                .unwrap()
-                .short_header
-                .as_ref()
-                .unwrap()
-        })
-        .cloned()
-        .collect();
-    ctx.send(
-        CreateReply::default().content(format!("Number of alerts: {}\nAlert titles: {}", alerts.subway_delay_count, subway_alert_titles.join("\n"))),
-    )
-    .await?;
-    Ok(())
-}
-
-/// Gets lines data from the MBTA API
-#[poise::command(prefix_command, track_edits, owners_only, hide_in_help)]
-pub async fn lines(ctx: Context<'_>) -> Result<(), Error> {
-    let lines = ctx.data().mbta.get_lines().await?;
-    let subways = lines.subways;
-    let subway_names: Vec<String> = subways
-        .iter()
-        .map(|subway| subway.attributes.long_name.clone())
-        .collect();
-    ctx.send(CreateReply::default().content(format!(
-        "Number of lines: {}\nLong names: {}",
-        lines.count,
-        subway_names.join(", ")
-    )))
-    .await?;
+pub async fn list(_ctx: Context<'_>) -> Result<(), Error> {
+    
     Ok(())
 }

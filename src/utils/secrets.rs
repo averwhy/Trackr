@@ -6,6 +6,7 @@ use std::fs::File;
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Secrets {
     pub token: String,
+    pub database_url: String,
     pub mbta_api_key: String,
 }
 pub fn get() -> Secrets {

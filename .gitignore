@@ -19,4 +19,3 @@ Cargo.lock
 .vscode/settings.json
 docker-compose.yml
 secrets.json
-.sqlx

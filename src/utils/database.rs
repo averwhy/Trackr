@@ -16,10 +16,10 @@ impl Client {
 
     /// Adds a user, a.k.a 'Passenger' to the database
     pub async fn add_user(self: Self, user: User) -> Result<UserId, Error> {
-        sqlx::query(
+        sqlx::query!(
             r#"INSERT INTO users(id) VALUES ( $1 )"#,
+            user.id.get() as i32
         )
-        .bind(user.id.get() as i32)
         .execute(&self.pool)
         .await?;
 
@@ -28,11 +28,11 @@ impl Client {
 
     /// Gets a user, a.k.a 'Passenger' from the database
     pub async fn get_user(self: Self, user: User) -> Result<UserId, Error> {
-        sqlx::query(
+        sqlx::query!(
             r#"SELECT * FROM users WHERE id = $1"#,
+            user.id.get() as i32
         )
-        .bind(user.id.get() as i32)
-        .execute(&self.pool)
+        .fetch_one(&self.pool)
         .await?;
 
         Ok(user.id)

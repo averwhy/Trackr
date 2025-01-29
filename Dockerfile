@@ -3,8 +3,8 @@ FROM rust:latest
 WORKDIR /bot
 
 COPY Cargo.toml .
-RUN cargo build
-
+COPY .sqlx ./.sqlx
 COPY src ./src
+RUN cargo build --release
 
 CMD ["cargo", "run"]

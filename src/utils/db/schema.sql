@@ -1,6 +1,6 @@
 CREATE TABLE users (
     id INT PRIMARY KEY,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE user_stats (
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -15,7 +15,7 @@ CREATE TABLE command_stats (
     command_name VARCHAR(100) NOT NULL,
     command_count INT DEFAULT 0,
     last_run TIMESTAMP
-)
+);
 CREATE TABLE active_trackings (
     id SERIAL PRIMARY KEY,
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,

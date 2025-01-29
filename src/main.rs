@@ -1,14 +1,12 @@
 use poise::serenity_prelude as serenity;
-use utils::database::Client;
 use std::{sync::Arc, time::Duration};
+use utils::database::Client;
+
 mod utils;
-use crate::utils::agencies::get_all as get_agencies;
-use crate::utils::agencies::Agency;
 use crate::utils::config::get as get_config;
 use crate::utils::config::Config;
-use crate::utils::secrets::get as get_secrets;
-
 use crate::utils::database;
+use crate::utils::secrets::get as get_secrets;
 
 mod commands;
 mod dev_commands;
@@ -110,7 +108,7 @@ async fn main() {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 Ok(Data {
                     pool: Client::new().await?,
-                    config
+                    config,
                 })
             })
         })

@@ -1,10 +1,10 @@
-use sqlx::postgres::PgPool;
-use crate::serenity::{User, UserId};
 use crate::get_secrets;
+use crate::serenity::{User, UserId};
 use crate::Error;
+use sqlx::postgres::PgPool;
 
 pub struct Client {
-    pool: PgPool
+    pool: PgPool,
 }
 
 impl Client {
@@ -16,13 +16,11 @@ impl Client {
 
     /// Adds a user, a.k.a 'Passenger' to the database
     pub async fn add_user(pool: &PgPool, user: User) -> Result<UserId, Error> {
-        let rec = sqlx::query!(
-            r#"
-    INSERT INTO users ( id,  )
-    VALUES ( $1 )
-            "#,
-            user.id
+        sqlx::query!(
+            r#"INSERT INTO users(id) VALUES ( $1 )"#,
+            user.id.get() as i32
         )
+        .execute(pool)
         .await?;
 
         Ok(user.id)

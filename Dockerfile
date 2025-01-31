@@ -1,4 +1,4 @@
-FROM rust:latest
+FROM rust:latest AS builder 
 WORKDIR /bot
 
 COPY Cargo.toml .
@@ -7,4 +7,5 @@ COPY .sqlx ./.sqlx
 COPY src ./src
 RUN cargo build --release
 
-CMD ["./target/release/Trackr"]
+COPY --from=builder /bot/target/release/Trackr .
+CMD ["./Trackr"]

@@ -4,7 +4,7 @@ use crate::Error;
 use sqlx::postgres::PgPool;
 
 pub struct Client {
-    pool: PgPool,
+    pub pool: PgPool,
 }
 
 impl Client {

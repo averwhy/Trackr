@@ -1,5 +1,6 @@
 use crate::{Context, Error};
-//use poise::CreateReply;
+use sqlx;
+use poise::CreateReply;
 
 /// Top level command for development commands. Owner only
 #[poise::command(
@@ -8,7 +9,7 @@ use crate::{Context, Error};
     owners_only,
     hide_in_help,
     subcommand_required,
-    subcommands("stop")
+    subcommands("stop", "sql")
 )]
 pub async fn dev(_ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
@@ -31,6 +32,25 @@ pub async fn stop(ctx: Context<'_>) -> Result<(), Error> {
     println!("\n{} is shutting down all shards...\n", ctx.author().name);
     let shard_manager = ctx.framework().shard_manager().clone();
     shard_manager.shutdown_all().await;
+    Ok(())
+}
+
+/// Runs an SQL query
+#[poise::command(
+    prefix_command,
+    track_edits,
+    owners_only,
+    hide_in_help,
+    category = "Dev"
+)]
+pub async fn sql(ctx: Context<'_>, query: String) -> Result<(), Error> {
+    sqlx::query(
+        query.as_str()
+    )
+    .execute(&ctx.data().db.pool)
+    .await
+    .map_err(|e| format!("Query execution failed: {}", e))?;
+
     Ok(())
 }
 

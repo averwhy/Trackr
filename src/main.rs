@@ -17,7 +17,7 @@ type Context<'a> = poise::Context<'a, Data, Error>;
 // Custom user data passed to all command functions
 
 pub struct Data {
-    pub pool: database::Client,
+    pub db: database::Client,
     pub config: Config,
 }
 
@@ -107,7 +107,7 @@ async fn main() {
                 println!("Logged in as {}", _ready.user.name);
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 Ok(Data {
-                    pool: Client::new().await?,
+                    db: Client::new().await?,
                     config,
                 })
             })

@@ -43,7 +43,6 @@ async fn main() {
     tracing_subscriber::fmt::init();
     let config = get_config();
     let secrets = get_secrets();
-
     // FrameworkOptions contains all of poise's configuration option in one struct
     // Every option can be omitted to use its default value
     let options = poise::FrameworkOptions {

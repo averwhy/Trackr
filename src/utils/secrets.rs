@@ -10,6 +10,7 @@ pub struct Secrets {
     pub mbta_api_key: String,
 }
 pub fn get() -> Secrets {
-    let file = File::open("secrets.json").expect("file should open read only"); // TODO: convert to env because docker
-    return serde_json::from_reader(file).expect("file should be proper JSON");
+    let secrets_path: String  = std::env::var("SECRETS").expect("No SECRETS environment variable declared");
+    let file = File::open(secrets_path).expect("Secrets file, as declared by the SECRETS environment variable, was not found");
+    return serde_json::from_reader(file).expect("Secrets file should be proper JSON");
 }

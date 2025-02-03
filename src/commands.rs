@@ -3,8 +3,6 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 #[allow(dead_code)]
 const DESCRIPTION: &str = env!("CARGO_PKG_DESCRIPTION");
 
-use crate::utils::agencies::get as get_agency;
-
 /// Show this help menu
 #[poise::command(prefix_command, track_edits, slash_command, category = "Misc")]
 pub async fn help(
@@ -67,36 +65,6 @@ pub async fn support(ctx: Context<'_>) -> Result<(), Error> {
         poise::CreateReply::default().content(
             "For support, ideas, foaming, and more, join our support server: discord.gg/kzZJ87WMEQ",
         ),
-    )
-    .await?;
-    Ok(())
-}
-
-/// Track a transit agency
-#[poise::command(prefix_command, track_edits, slash_command, category = "Tracking")]
-pub async fn track(
-    ctx: Context<'_>,
-    #[description = "The name of the transit agency to check the status of"] agency_name: String,
-) -> Result<(), Error> {
-    let agency_name_upper = agency_name.to_uppercase();
-    let Some(agency) = get_agency(agency_name_upper) else {
-        poise::send_reply(
-            ctx,
-            poise::CreateReply::default()
-                .ephemeral(false)
-                .content(format!("Could not find agency `{}`", agency_name)),
-        )
-        .await?;
-        return Ok(());
-    };
-    poise::send_reply(
-        ctx,
-        poise::CreateReply::default()
-            .ephemeral(false)
-            .content(format!(
-                "Pretending to track {}\nVisit them at {}",
-                agency.name, agency.url
-            )),
     )
     .await?;
     Ok(())

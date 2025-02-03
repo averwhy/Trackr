@@ -49,12 +49,11 @@ async fn main() {
         // this is a list of all commands from the commands.rs file
         commands: vec![
             commands::help(), // Public commands \/
-            commands::track(),
             commands::about(),
             commands::support(),
             dev_commands::dev(), // Dev commands \/
             dev_commands::track(),
-        ], // dev only commands (subcommands are NOT included because then they would be runnable on their own)
+        ],
         prefix_options: poise::PrefixFrameworkOptions {
             prefix: Some(config.prefix.clone()),
             // tracks messages that are edited within the last hour
@@ -106,7 +105,7 @@ async fn main() {
                 println!("Logged in as {}", _ready.user.name);
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 Ok(Data {
-                    db: Client::new().await?,
+                    db: Client::new().await.expect("Failed to connect to database"),
                     config,
                 })
             })

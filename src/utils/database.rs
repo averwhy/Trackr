@@ -10,7 +10,7 @@ pub struct Client {
 impl Client {
     pub async fn new() -> Result<Self, sqlx::Error> {
         let secrets = get_secrets();
-        let pool = PgPool::connect(&secrets.database_url).await?;
+        let pool = PgPool::connect(&secrets.database_url).await.expect("Could not connect to PostgreSQL. Check the database URL");
         Ok(Self { pool })
     }
 
@@ -34,7 +34,7 @@ impl Client {
         )
         .fetch_one(&self.pool)
         .await?;
-
+        
         Ok(user.id)
     }
 }

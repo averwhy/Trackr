@@ -1,6 +1,8 @@
 use crate::{Context, Error};
-use sqlx;
 use poise::CreateReply;
+use sqlx::{self, query};
+use tracing_subscriber::fmt::format;
+use sqlx::Row;
 
 /// Top level command for development commands. Owner only
 #[poise::command(
@@ -43,14 +45,25 @@ pub async fn stop(ctx: Context<'_>) -> Result<(), Error> {
     hide_in_help,
     category = "Dev"
 )]
-pub async fn sql(ctx: Context<'_>, query: String) -> Result<(), Error> {
-    sqlx::query(
-        query.as_str()
-    )
-    .execute(&ctx.data().db.pool)
-    .await
-    .map_err(|e| format!("Query execution failed: {}", e))?;
-
+pub async fn sql(ctx: Context<'_>, #[rest] query: String) -> Result<(), Error> {
+    let result = "";
+    // todo for this: write structs for all db tables
+    if query.to_uppercase().contains("SELECT"){
+        let r = sqlx::query(
+            query.as_str()
+        )
+        .fetch_one(&ctx.data().db.pool)
+        .await
+        .map_err(|e| format!("Query execution failed: {}", e))?;
+    } else {
+        sqlx::query(
+            query.as_str()
+        )
+        .execute(&ctx.data().db.pool)
+        .await
+        .map_err(|e| format!("Query execution failed: {}", e))?;
+    }
+    poise::send_reply(ctx, poise::CreateReply::default().content(result)).await?;
     Ok(())
 }
 

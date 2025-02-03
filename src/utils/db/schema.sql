@@ -29,7 +29,9 @@ CREATE TABLE agencies (
     short_name VARCHAR(50) NOT NULL,
     long_name VARCHAR(100) NOT NULL,
     api_url TEXT NOT NULL,
+    key_required BOOLEAN DEFAULT TRUE,
     key_env_name VARCHAR(100) NOT NULL,
+    auth_header_name VARCHAR(100) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

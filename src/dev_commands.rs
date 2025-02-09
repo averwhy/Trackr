@@ -1,8 +1,8 @@
 use crate::{Context, Error};
 use poise::CreateReply;
 use sqlx::{self, query};
-use tracing_subscriber::fmt::format;
-use sqlx::Row;
+use sqlx::{Column, Row};
+use std::fmt::Write;
 
 /// Top level command for development commands. Owner only
 #[poise::command(
@@ -46,24 +46,32 @@ pub async fn stop(ctx: Context<'_>) -> Result<(), Error> {
     category = "Dev"
 )]
 pub async fn sql(ctx: Context<'_>, #[rest] query: String) -> Result<(), Error> {
-    let result = "";
-    // todo for this: write structs for all db tables
-    if query.to_uppercase().contains("SELECT"){
-        let r = sqlx::query(
-            query.as_str()
-        )
-        .fetch_one(&ctx.data().db.pool)
-        .await
-        .map_err(|e| format!("Query execution failed: {}", e))?;
-    } else {
-        sqlx::query(
-            query.as_str()
-        )
-        .execute(&ctx.data().db.pool)
-        .await
-        .map_err(|e| format!("Query execution failed: {}", e))?;
+    let pool = &ctx.data().db.pool;
+    let result = sqlx::query(query.as_str()).fetch_all(pool).await;
+    match result {
+        Ok(rows) => {
+            let mut response = String::new();
+            for row in rows {
+                let mut row_str = String::new();
+                for (i, column) in row.columns().iter().enumerate() {
+                    let value = match row.try_get::<String, _>(i) {
+                        Ok(v) => v,
+                        Err(_) => "NULL".to_string(),
+                    };
+                    write!(row_str, "{}: {}, ", column.name(), value)?;
+                }
+                writeln!(response, "{}", row_str)?;
+            }
+            let reply =
+                CreateReply::default().content(format!("Query results:\n```\n{}\n```", response));
+            ctx.send(reply).await?;
+        }
+        Err(e) => {
+            let reply = CreateReply::default().content(format!("Error executing query: {}", e));
+            ctx.send(reply).await?;
+        }
     }
-    poise::send_reply(ctx, poise::CreateReply::default().content(result)).await?;
+
     Ok(())
 }
 

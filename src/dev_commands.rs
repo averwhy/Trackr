@@ -1,5 +1,6 @@
 use crate::{Context, Error};
 use poise::CreateReply;
+use reqwest::Response;
 use sqlx::{self, query};
 use sqlx::{Column, Row};
 use std::fmt::Write;
@@ -62,12 +63,18 @@ pub async fn sql(ctx: Context<'_>, #[rest] query: String) -> Result<(), Error> {
                 }
                 writeln!(response, "{}", row_str)?;
             }
+            if response.chars().count() <= 0 {
+                // There was no result, lets just react with a check
+                if let Context::Prefix(ctx) = ctx {
+                    ctx.msg.react(ctx, '✅').await?;
+                }
+            }
             let reply =
                 CreateReply::default().content(format!("Query results:\n```\n{}\n```", response));
             ctx.send(reply).await?;
         }
         Err(e) => {
-            let reply = CreateReply::default().content(format!("Error executing query: {}", e));
+            let reply = CreateReply::default().content(format!("{}", e));
             ctx.send(reply).await?;
         }
     }

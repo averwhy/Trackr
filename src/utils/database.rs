@@ -1,6 +1,7 @@
 use crate::get_secrets;
 use crate::serenity::{User, UserId};
 use crate::Error;
+use log::info;
 use sqlx::postgres::PgPool;
 
 pub struct Client {
@@ -10,7 +11,16 @@ pub struct Client {
 impl Client {
     pub async fn new() -> Result<Self, sqlx::Error> {
         let secrets = get_secrets();
-        let pool = PgPool::connect(&secrets.database_url).await.expect("Could not connect to PostgreSQL. Check the database URL");
+        let get_pool: Result<PgPool, Error> = async {
+            match PgPool::connect(&secrets.database_url).await {
+                Ok(pool) => Ok(pool),
+                Err(e) => {
+                    PgPool::connect(&secrets.alt_database_url).await.map_err(|_| e)
+                }
+            }.map_err(|e| e.into())
+        }.await;
+        let pool = get_pool.expect("Failed to setup Postgres on both an internal Docker network, and externally. Check database url(s)");
+        info!("Postgres connected successfully");
         Ok(Self { pool })
     }
 

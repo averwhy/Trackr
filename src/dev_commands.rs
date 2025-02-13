@@ -1,9 +1,12 @@
 use crate::{Context, Error};
 use poise::CreateReply;
-use reqwest::Response;
-use sqlx::{self, query};
+use sqlx::{self, TypeInfo};
 use sqlx::{Column, Row};
+use sqlx::types::chrono;
+use chrono_humanize::HumanTime;
 use std::fmt::Write;
+use log::warn;
+
 
 /// Top level command for development commands. Owner only
 #[poise::command(
@@ -32,7 +35,7 @@ pub async fn stop(ctx: Context<'_>) -> Result<(), Error> {
         // if it doesn't know for a fact that it is Context::Prefix, it will not see .msg
         ctx.msg.react(ctx, '👋').await?;
     }
-    println!("\n{} is shutting down all shards...\n", ctx.author().name);
+    warn!("{} is shutting down all shards- bye!\n", ctx.author().name);
     let shard_manager = ctx.framework().shard_manager().clone();
     shard_manager.shutdown_all().await;
     Ok(())
@@ -55,11 +58,15 @@ pub async fn sql(ctx: Context<'_>, #[rest] query: String) -> Result<(), Error> {
             for row in rows {
                 let mut row_str = String::new();
                 for (i, column) in row.columns().iter().enumerate() {
-                    let value = match row.try_get::<String, _>(i) {
-                        Ok(v) => v,
-                        Err(_) => "NULL".to_string(),
+                    let value: String = match column.type_info().name() {
+                        "TEXT" | "VARCHAR" => row.try_get::<String, _>(i).unwrap_or("NULL".to_string()),
+                        "INTEGER" | "INT" | "INT8" | "BIGINT" | "SMALLINT" => row.try_get::<i64, _>(i).map(|v| v.to_string()).unwrap_or("NULL".to_string()),
+                        "REAL" | "FLOAT" | "DOUBLE" => row.try_get::<f64, _>(i).map(|v| v.to_string()).unwrap_or("NULL".to_string()),
+                        "BOOLEAN" | "BOOL" => row.try_get::<bool, _>(i).map(|v| v.to_string()).unwrap_or("NULL".to_string()),
+                        "TIMESTAMP" => row.try_get::<chrono::DateTime<chrono::Utc>, _>(i).map(|v| HumanTime::from(v).to_string()).unwrap_or("NULL".to_string()),
+                        _ => "Unsupported Type".to_string(),
                     };
-                    write!(row_str, "{}: {}, ", column.name(), value)?;
+                    write!(row_str, "{} ({}): {}, ", column.name(), column.type_info().name(), value)?;
                 }
                 writeln!(response, "{}", row_str)?;
             }

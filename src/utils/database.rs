@@ -1,7 +1,7 @@
 use crate::get_secrets;
 use crate::serenity::{User, UserId};
 use crate::Error;
-use log::info;
+use tracing::{Level, span};
 use sqlx::postgres::PgPool;
 
 pub struct Client {
@@ -20,7 +20,7 @@ impl Client {
             }.map_err(|e| e.into())
         }.await;
         let pool = get_pool.expect("Failed to setup Postgres on both an internal Docker network, and externally. Check database url(s)");
-        info!("Postgres connected successfully");
+        span!(Level::INFO, "Postgres connected successfully");
         Ok(Self { pool })
     }
 

@@ -16,8 +16,8 @@ sqlx = { version = "0.8", features = [
     "chrono"
 ] }
 dotenv = "0.15.0"
-log = "0.4.25"
 chrono-humanize = "0.2.3"
+tracing = "0.1.41"
 
 [dependencies.serde]
 version = "1.0.217"

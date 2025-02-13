@@ -1,8 +1,7 @@
 use poise::serenity_prelude as serenity;
 use std::{sync::Arc, time::Duration};
 use utils::database::Client;
-use log::{info, warn, error};
-
+use tracing::{Level, span};
 mod utils;
 use crate::utils::config::get as get_config;
 use crate::utils::config::Config;
@@ -29,11 +28,12 @@ async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
     match error {
         poise::FrameworkError::Setup { error, .. } => panic!("Failed to start bot: {:?}", error),
         poise::FrameworkError::Command { error, ctx, .. } => {
-            error!("Command `{}` failed: {:?}", ctx.command().name, error,);
+            let cmd_name = ctx.command().name.clone();
+            span!(Level::ERROR, "Command `{}` failed: {:?}", cmd_name, error);
         }
         error => {
             if let Err(e) = poise::builtins::on_error(error).await {
-                error!("Handling error failed: {}", e)
+                tracing::error!("Handling error failed: {:?}", e)
             }
         }
     }
@@ -68,13 +68,15 @@ async fn main() {
         // This code is run before every command
         pre_command: |ctx| {
             Box::pin(async move {
-                info!("Executing command {}...", ctx.command().qualified_name);
+                let cmd_name = ctx.command().qualified_name.clone();
+                span!(Level::INFO, "Executing command {}...", cmd_name);
             })
         },
         // This code is run after a command if it was successful (returned Ok)
         post_command: |ctx| {
             Box::pin(async move {
-                info!("Executed command {}!", ctx.command().qualified_name);
+                let cmd_name = ctx.command().qualified_name.clone();
+                span!(Level::INFO, "Executed command {}!", cmd_name);
             })
         },
         // Every command invocation must pass this check to continue execution
@@ -103,7 +105,7 @@ async fn main() {
     let framework = poise::Framework::builder()
         .setup(move |ctx, _ready, framework| {
             Box::pin(async move {
-                info!("Logged in as {}", _ready.user.name);
+                span!(Level::INFO, "Logged in as {}", _ready.user.name);
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 Ok(Data {
                     db: Client::new().await.expect("Failed to connect to database"),

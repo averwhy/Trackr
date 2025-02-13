@@ -5,8 +5,7 @@ use sqlx::{Column, Row};
 use sqlx::types::chrono;
 use chrono_humanize::HumanTime;
 use std::fmt::Write;
-use log::warn;
-
+use tracing::{Level, span};
 
 /// Top level command for development commands. Owner only
 #[poise::command(
@@ -35,7 +34,8 @@ pub async fn stop(ctx: Context<'_>) -> Result<(), Error> {
         // if it doesn't know for a fact that it is Context::Prefix, it will not see .msg
         ctx.msg.react(ctx, '👋').await?;
     }
-    warn!("{} is shutting down all shards- bye!\n", ctx.author().name);
+    let author_name = ctx.author().name.clone();
+    span!(Level::INFO, "{} is shutting down all shards- bye!\n", author_name);
     let shard_manager = ctx.framework().shard_manager().clone();
     shard_manager.shutdown_all().await;
     Ok(())

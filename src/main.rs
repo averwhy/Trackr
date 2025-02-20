@@ -1,7 +1,7 @@
 use poise::serenity_prelude as serenity;
 use std::{sync::Arc, time::Duration};
+use tracing::{span, Level};
 use utils::database::Client;
-use tracing::{Level, span};
 mod utils;
 use crate::utils::config::get as get_config;
 use crate::utils::config::Config;

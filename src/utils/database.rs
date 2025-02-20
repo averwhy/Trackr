@@ -1,8 +1,8 @@
 use crate::get_secrets;
 use crate::serenity::{User, UserId};
 use crate::Error;
-use tracing::{Level, span};
 use sqlx::postgres::PgPool;
+use tracing::{span, Level};
 
 pub struct Client {
     pub pool: PgPool,
@@ -14,11 +14,13 @@ impl Client {
         let get_pool: Result<PgPool, Error> = async {
             match PgPool::connect(&secrets.database_url).await {
                 Ok(pool) => Ok(pool),
-                Err(e) => {
-                    PgPool::connect(&secrets.alt_database_url).await.map_err(|_| e)
-                }
-            }.map_err(|e| e.into())
-        }.await;
+                Err(e) => PgPool::connect(&secrets.alt_database_url)
+                    .await
+                    .map_err(|_| e),
+            }
+            .map_err(|e| e.into())
+        }
+        .await;
         let pool = get_pool.expect("Failed to setup Postgres on both an internal Docker network, and externally. Check database url(s)");
         span!(Level::INFO, "Postgres connected successfully");
         Ok(Self { pool })
@@ -38,13 +40,10 @@ impl Client {
 
     /// Gets a user, a.k.a 'Passenger' from the database
     pub async fn get_user(self: Self, user: User) -> Result<UserId, Error> {
-        sqlx::query!(
-            r#"SELECT * FROM users WHERE id = $1"#,
-            user.id.get() as i32
-        )
-        .fetch_one(&self.pool)
-        .await?;
-        
+        sqlx::query!(r#"SELECT * FROM users WHERE id = $1"#, user.id.get() as i32)
+            .fetch_one(&self.pool)
+            .await?;
+
         Ok(user.id)
     }
 }

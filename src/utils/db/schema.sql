@@ -1,9 +1,9 @@
 CREATE TABLE users (
-    id INT PRIMARY KEY,
+    id BIGINT PRIMARY KEY,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE user_stats (
-    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     checked_count INT DEFAULT 0,
     tracked_count INT DEFAULT 0,
     last_checked TIMESTAMPTZ,
@@ -13,14 +13,16 @@ CREATE TABLE user_stats (
 CREATE TABLE command_stats (
     id SERIAL PRIMARY KEY,
     command_name VARCHAR(100) NOT NULL,
-    command_count INT DEFAULT 0,
+    command_count BIGINT DEFAULT 0,
     last_run TIMESTAMPTZ
 );
 CREATE TABLE active_trackings (
     id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     agency_id INT NOT NULL,
     line_id VARCHAR(50) NOT NULL,
+    channel_id BIGINT NOT NULL,
+    message_id BIGINT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );

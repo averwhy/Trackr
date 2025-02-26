@@ -4,7 +4,6 @@ use serenity::builder::CreateEmbed;
 use sqlx::types::chrono;
 use sqlx::{self, TypeInfo};
 use sqlx::{Column, Row};
-use std::fmt::Write;
 use tracing::{span, Level};
 
 /// Top level command for development commands. Owner only
@@ -37,7 +36,7 @@ pub async fn stop(ctx: Context<'_>) -> Result<(), Error> {
     let author_name = ctx.author().name.clone();
     span!(
         Level::INFO,
-        "{} is shutting down all shards- bye!\n",
+        "{} is shutting down all shards",
         author_name
     );
     let shard_manager = ctx.framework().shard_manager().clone();

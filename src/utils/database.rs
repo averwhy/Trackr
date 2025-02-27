@@ -1,5 +1,5 @@
 use crate::get_secrets;
-use crate::serenity::{User, UserId};
+use crate::serenity::{User, UserId, Command};
 use crate::Error;
 use sqlx::postgres::PgPool;
 use tracing::{span, Level};
@@ -45,5 +45,19 @@ impl Client {
             .await?;
 
         Ok(user.id)
+    }
+
+    pub async fn command_exists(&self, command: Command) -> Result<bool, Error>{
+        sqlx::query!(r#"SELECT * FROM command_stats WHERE command_name = $1"#, command.name)
+            .fetch_one(&self.pool)
+            .await?;
+        Ok(true)
+    }
+
+    /// Adds an use to a specified command
+    pub async fn update_command(&self, command: Command) -> Result<(), Error> {
+        self.command_exists(command.clone()).await.expect(&format!("Command '{}' does not exist", command.name.to_string()));
+        sqlx::query!(r#"UPDATE command_stats SET command_count = (command_count + 1) WHERE command_name = $1"#, command.clone().name).execute(&self.pool).await?;
+        Ok(())
     }
 }

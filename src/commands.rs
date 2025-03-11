@@ -29,7 +29,7 @@ pub async fn help(
 #[poise::command(prefix_command, track_edits, slash_command, category = "Misc")]
 pub async fn about(ctx: Context<'_>) -> Result<(), Error> {
     let about: String = format!("Trackr v{}, created by @averwhy
-{} Track subways, busses, regional rail, and more.
+{} Track subways, regional rail, and more.
 *Please note that Trackr is under active development and is not fully functional.*
 The current scope of the bot is: ```md
 <On Release (v1.0.0)>

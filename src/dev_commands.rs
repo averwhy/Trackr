@@ -123,7 +123,7 @@ pub async fn track(
     station: String,
 ) -> Result<(), Error> {
     // query database with passed in arguments
-    
+
     Ok(())
 }
 

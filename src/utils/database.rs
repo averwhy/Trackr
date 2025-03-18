@@ -4,14 +4,12 @@ use crate::Error;
 use sqlx::postgres::PgPool;
 use sqlx::types::chrono::{DateTime, Utc};
 use tracing::{span, Level};
-
 pub struct Client {
     pub pool: PgPool,
 }
-
 pub struct DbPassenger {
     pub id: i64,
-    pub created_at: Option<DateTime<Utc>> // This should not be optional but whatever i guess
+    pub created_at: Option<DateTime<Utc>>, // This should not be optional but whatever i guess
 }
 
 impl Client {
@@ -46,9 +44,13 @@ impl Client {
 
     /// Gets a user, a.k.a 'Passenger' from the database
     pub async fn get_user(&self, user: User) -> Result<DbPassenger, Error> {
-        let result = sqlx::query_as!(DbPassenger, r#"SELECT * FROM users WHERE id = $1"#, user.id.get() as i32)
-            .fetch_one(&self.pool)
-            .await?;
+        let result = sqlx::query_as!(
+            DbPassenger,
+            r#"SELECT * FROM users WHERE id = $1"#,
+            user.id.get() as i32
+        )
+        .fetch_one(&self.pool)
+        .await?;
 
         Ok(result)
     }

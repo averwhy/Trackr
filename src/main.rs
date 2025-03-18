@@ -4,6 +4,7 @@ use tracing::{span, Level};
 use utils::database::Client;
 use utils::tracking::Tracking;
 mod utils;
+use crate::utils::api;
 use crate::utils::config::get as get_config;
 use crate::utils::config::Config;
 use crate::utils::database;
@@ -19,6 +20,7 @@ type Context<'a> = poise::Context<'a, Data, Error>;
 
 pub struct Data {
     pub db: database::Client,
+    pub api: api::Api,
     pub config: Config,
     pub trackings: Vec<Tracking>,
 }
@@ -109,10 +111,12 @@ async fn main() {
             Box::pin(async move {
                 span!(Level::INFO, "Logged in as {}", _ready.user.name);
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
+                let trackdb = Client::new().await.expect("Failed to connect to database");
                 Ok(Data {
-                    db: Client::new().await.expect("Failed to connect to database"),
+                    db: trackdb.clone(),
+                    api: api::Api::new(trackdb),
                     config,
-                    trackings: Vec::new(), // TODO replace
+                    trackings: Vec::new(), // TODO implement
                 })
             })
         })

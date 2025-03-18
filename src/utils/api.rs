@@ -1,7 +1,8 @@
-use crate::serenity::{Command, User, UserId};
 use crate::utils::database::Client;
 use crate::Error;
-use sqlx::Row;
+use reqwest::StatusCode;
+use serde;
+use std::fmt::Error as StdError;
 
 pub struct Api {
     client: Client,
@@ -12,15 +13,39 @@ impl Api {
         Self { client }
     }
 
+    async fn request<T>(&self, url: String, auth_header: String, auth: String) -> Result<(), Error>
+    where
+        T: serde::de::DeserializeOwned,
+    {
+        let client = reqwest::Client::new();
+        let resp = client.post(url).header(auth_header, auth).send().await?;
+
+        if resp.status() == StatusCode::OK {
+            let response = resp.json::<T>().await;
+            // todo: use json header stored in database to get data
+        }
+
+        Ok(())
+    }
+
     pub async fn build_url(&self, agency_id: i32) -> Result<String, Error> {
+        let result = sqlx::query!(r#"SELECT api_url FROM agencies WHERE id = $1"#, agency_id)
+            .fetch_one(&self.client.pool)
+            .await?;
+        let full_url = format!("https://{}", result.api_url);
+        Ok(full_url)
+    }
+
+    /// Get's the agency's API secret from the environment as specified by key_env_name in the database
+    pub async fn get_auth(&self, agency_id: i32) -> Result<String, Error> {
         let result = sqlx::query!(
-            r#"SELECT api_url FROM agencies WHERE id = $1"#,
+            r#"SELECT key_env_name FROM agencies WHERE id = $1"#,
             agency_id
         )
         .fetch_one(&self.client.pool)
         .await?;
-        let full_url = format!("https://{}", result.api_url);
-        Ok(full_url)
+        let api_secret = std::env::var(result.key_env_name.unwrap());
+        Ok(api_secret.unwrap())
     }
 
     /// Checks the line cache for the line, if not then it will try to get it from the api
@@ -42,7 +67,7 @@ impl Api {
             .try_line(agency_id, line)
             .await
             .expect("Could not find any matching lines");
-        // TODO: api call to get station, return results
+
         Ok(())
     }
 }

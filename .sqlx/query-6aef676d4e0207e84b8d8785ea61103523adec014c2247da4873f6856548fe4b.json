@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT line_id FROM agency_line_cache WHERE agency_id = $1 AND LOWER(line_name) = LOWER($2)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "line_id",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "6aef676d4e0207e84b8d8785ea61103523adec014c2247da4873f6856548fe4b"
+}

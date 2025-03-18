@@ -38,7 +38,8 @@ CREATE TABLE agencies (
 );
 -- Index for ez short_name lookups
 CREATE INDEX idx_agencies_short_name ON agencies (short_name);
-CREATE TABLE agency_lines (
+
+CREATE TABLE agency_line_cache (
     id SERIAL PRIMARY KEY,
     agency_id INT NOT NULL REFERENCES agencies(id) ON DELETE CASCADE,
     line_id VARCHAR(50) NOT NULL,
@@ -48,7 +49,8 @@ CREATE TABLE agency_lines (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 -- Index for ez agency_id/line_id lookups
-CREATE INDEX idx_agency_lines_agency_id_line_id ON agency_lines (agency_id, line_id);
+CREATE INDEX idx_agency_line_cache_agency_id_line_id ON agency_line_cache (agency_id, line_id);
+
 CREATE TABLE endpoints (
     id SERIAL PRIMARY KEY,
     agency_id INT NOT NULL REFERENCES agencies(id) ON DELETE CASCADE,
@@ -59,6 +61,7 @@ CREATE TABLE endpoints (
 );
 -- Index for faster lookups by agency_id and endpoint_type
 CREATE INDEX idx_endpoints_agency_id_endpoint_type ON endpoints (agency_id, endpoint_type);
+
 CREATE TABLE endpoint_pointers (
     id SERIAL PRIMARY KEY,
     endpoint_id INT NOT NULL REFERENCES endpoints(id) ON DELETE CASCADE,
@@ -68,10 +71,11 @@ CREATE TABLE endpoint_pointers (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX idx_endpoint_pointers_endpoint_id_pointer_key ON endpoint_pointers (endpoint_id, pointer_key);
+
 CREATE TABLE statistics (
     id SERIAL PRIMARY KEY,
     agency_id INT REFERENCES agencies(id) ON DELETE CASCADE,
-    line_id INT REFERENCES agency_lines(id) ON DELETE CASCADE,
+    line_id INT REFERENCES agency_line_cache(id) ON DELETE CASCADE,
     checked_count INT DEFAULT 0,
     tracked_count INT DEFAULT 0,
     alert_count INT DEFAULT 0,

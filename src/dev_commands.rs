@@ -1,3 +1,5 @@
+use crate::utils::agencies::Agency;
+use crate::utils::tracking;
 use crate::{Context, Error};
 use poise::CreateReply;
 use serenity::builder::CreateEmbed;
@@ -34,11 +36,7 @@ pub async fn stop(ctx: Context<'_>) -> Result<(), Error> {
         ctx.msg.react(ctx, '👋').await?;
     }
     let author_name = ctx.author().name.clone();
-    span!(
-        Level::INFO,
-        "{} is shutting down all shards",
-        author_name
-    );
+    span!(Level::INFO, "{} is shutting down all shards", author_name);
     let shard_manager = ctx.framework().shard_manager().clone();
     shard_manager.shutdown_all().await;
     Ok(())
@@ -118,12 +116,25 @@ pub async fn addagency(_ctx: Context<'_>) -> Result<(), Error> {
     hide_in_help,
     subcommands("list")
 )]
-pub async fn track(_ctx: Context<'_>) -> Result<(), Error> {
+pub async fn track(
+    ctx: Context<'_>,
+    agency: String,
+    line: String,
+    station: String,
+) -> Result<(), Error> {
+    // query database with passed in arguments
+    
     Ok(())
 }
 
 /// Shows list of tracked lines or subway stations
-#[poise::command(prefix_command, track_edits, owners_only, hide_in_help)]
+#[poise::command(prefix_command, track_edits, owners_only, hide_in_help)] // TODO: Once done, add back slash command support
 pub async fn list(_ctx: Context<'_>) -> Result<(), Error> {
+    Ok(())
+}
+
+/// Gets the ETA of the next train at a specified station
+#[poise::command(prefix_command, track_edits, owners_only, hide_in_help)] // TODO: Once done, add back slash command support
+pub async fn eta(_ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }

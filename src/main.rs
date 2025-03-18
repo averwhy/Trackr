@@ -1,8 +1,8 @@
 use poise::serenity_prelude as serenity;
-use utils::tracking::Tracking;
 use std::{sync::Arc, time::Duration};
 use tracing::{span, Level};
 use utils::database::Client;
+use utils::tracking::Tracking;
 mod utils;
 use crate::utils::config::get as get_config;
 use crate::utils::config::Config;
@@ -20,7 +20,7 @@ type Context<'a> = poise::Context<'a, Data, Error>;
 pub struct Data {
     pub db: database::Client,
     pub config: Config,
-    pub trackings: Vec<Tracking>
+    pub trackings: Vec<Tracking>,
 }
 
 async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
@@ -112,7 +112,7 @@ async fn main() {
                 Ok(Data {
                     db: Client::new().await.expect("Failed to connect to database"),
                     config,
-                    trackings: Vec::new() // TODO replace
+                    trackings: Vec::new(), // TODO replace
                 })
             })
         })

@@ -1,0 +1,53 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT * FROM endpoints WHERE agency_id = $1 AND endpoint_type = $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "agency_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "endpoint_type",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "endpoint_path",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "bc76bbceac3b534b7fa98bdf731b6b2a56d1355ee396bcd30605ae6c8d6f1674"
+}

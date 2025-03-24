@@ -1,4 +1,5 @@
 use crate::utils::database::Client;
+use crate::utils::database::EndpointType;
 use crate::Error;
 use reqwest::StatusCode;
 use serde;
@@ -22,7 +23,7 @@ impl Api {
 
         if resp.status() == StatusCode::OK {
             let response = resp.json::<T>().await;
-            // todo: use json header stored in database to get data
+            // todo: use json pointer stored in database to get data
         }
 
         Ok(())
@@ -50,10 +51,10 @@ impl Api {
 
     /// Checks the line cache for the line, if not then it will try to get it from the api
     pub async fn try_line(&self, agency_id: i32, line: String) -> Result<String, Error> {
-        let line_id = sqlx::query!(r#"SELECT line_id FROM agency_line_cache WHERE agency_id = $1 AND LOWER(line_name) = LOWER($2)"#, agency_id, line.to_string()).fetch_one(&self.client.pool)
+        let result = sqlx::query!(r#"SELECT line_id FROM agency_line_cache WHERE agency_id = $1 AND LOWER(line_name) = LOWER($2)"#, agency_id, line.to_string()).fetch_one(&self.client.pool)
             .await?;
         let api_url = &self.build_url(agency_id);
-        Ok(line_id.line_id) // TODO: This better work
+        Ok(result.line_id) // TODO: This better work
     }
 
     /// Attempts to get station data from the given agency, line and station name
@@ -65,9 +66,8 @@ impl Api {
     ) -> Result<(), Error> {
         let line = self
             .try_line(agency_id, line)
-            .await
-            .expect("Could not find any matching lines");
-
+            .await?;
+        let endpoint_pointer = &self.client.get_json_pointer(agency_id, EndpointType::AllLines);
         Ok(())
     }
 }

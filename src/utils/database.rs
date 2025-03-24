@@ -4,12 +4,46 @@ use crate::Error;
 use sqlx::postgres::PgPool;
 use sqlx::types::chrono::{DateTime, Utc};
 use tracing::{span, Level};
+
+pub enum EndpointType {
+    AllAlerts,
+    Alert,
+    AllLines,
+    Lines,
+    AllStations,
+    Station,
+    StopPrediction,
+}
+
+impl EndpointType {
+    fn as_str(&self) -> &'static str {
+        match self {
+            EndpointType::AllAlerts => "ALL_ALERTS",
+            EndpointType::Alert => "ALERT",
+            EndpointType::AllLines => "ALL_LINES",
+            EndpointType::Lines => "LINES",
+            EndpointType::AllStations => "ALL_STATIONS",
+            EndpointType::Station => "STATION",
+            EndpointType::StopPrediction => "PREDICTION",
+        }
+    }
+}
+
 pub struct Client {
     pub pool: PgPool,
 }
 pub struct DbPassenger {
     pub id: i64,
     pub created_at: Option<DateTime<Utc>>, // This should not be optional but whatever i guess
+}
+
+pub struct DbEndpointPointer{
+    pub id: i32,
+    pub endpoint_id: i32,
+    pub pointer_key: String,
+    pub pointer_path: String,
+    pub created_at: Option<DateTime<Utc>>,
+    pub updated_at: Option<DateTime<Utc>>
 }
 
 impl Client {
@@ -64,6 +98,26 @@ impl Client {
             .fetch_one(&self.pool)
             .await?;
         Ok(result.id)
+    }
+
+    pub async fn get_json_pointer(&self, agency_id: i32, endpoint_type: EndpointType) -> Result<DbEndpointPointer, Error>{
+        let endpoint_result = sqlx::query!(
+            r#"SELECT * FROM endpoints WHERE agency_id = $1 AND endpoint_type = $2"#,
+            agency_id,
+            endpoint_type.as_str()
+        )
+        .fetch_one(&self.pool)
+        .await?;
+        
+        let pointer_result = sqlx::query_as!(
+            DbEndpointPointer, 
+            r#"SELECT * FROM endpoint_pointers WHERE endpoint_id = $1"#,
+            endpoint_result.id
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(pointer_result)
     }
 
     pub async fn command_exists(&self, command: Command) -> Result<bool, Error> {

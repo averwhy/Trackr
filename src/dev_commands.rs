@@ -122,8 +122,11 @@ pub async fn track(
     line: String,
     station: String,
 ) -> Result<(), Error> {
-    // query database with passed in arguments
-
+    // Will try to get the agency in the DB based off the agency name passed in, e.g. /track mbta
+    let agency_id = ctx.data().db.get_agency(agency).await?;
+    // Now try to see if we can find the line that they want based on the agency (e.g. red line)
+    let line_id = ctx.data().api.try_line(agency_id, line).await?;
+    // Now try to get the station 
     Ok(())
 }
 

@@ -37,13 +37,13 @@ pub struct DbPassenger {
     pub created_at: Option<DateTime<Utc>>, // This should not be optional but whatever i guess
 }
 
-pub struct DbEndpointPointer{
+pub struct DbEndpointPointer {
     pub id: i32,
     pub endpoint_id: i32,
     pub pointer_key: String,
     pub pointer_path: String,
     pub created_at: Option<DateTime<Utc>>,
-    pub updated_at: Option<DateTime<Utc>>
+    pub updated_at: Option<DateTime<Utc>>,
 }
 
 impl Client {
@@ -100,7 +100,11 @@ impl Client {
         Ok(result.id)
     }
 
-    pub async fn get_json_pointer(&self, agency_id: i32, endpoint_type: EndpointType) -> Result<DbEndpointPointer, Error>{
+    pub async fn get_json_pointer(
+        &self,
+        agency_id: i32,
+        endpoint_type: EndpointType,
+    ) -> Result<DbEndpointPointer, Error> {
         let endpoint_result = sqlx::query!(
             r#"SELECT * FROM endpoints WHERE agency_id = $1 AND endpoint_type = $2"#,
             agency_id,
@@ -108,9 +112,9 @@ impl Client {
         )
         .fetch_one(&self.pool)
         .await?;
-        
+
         let pointer_result = sqlx::query_as!(
-            DbEndpointPointer, 
+            DbEndpointPointer,
             r#"SELECT * FROM endpoint_pointers WHERE endpoint_id = $1"#,
             endpoint_result.id
         )

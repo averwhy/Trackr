@@ -1,8 +1,11 @@
 use crate::utils::database::Client;
 use crate::utils::database::EndpointType;
 use crate::Error;
+use jsonptr::Pointer;
 use reqwest::StatusCode;
 use serde;
+use serenity::json;
+use sqlx::Value;
 
 pub struct Api {
     client: Client,
@@ -13,25 +16,31 @@ impl Api {
         Self { client }
     }
 
-    async fn request<T>(&self, url: String, auth_header: String, auth: String) -> Result<T, Error>
-    where
-        T: serde::de::DeserializeOwned,
-    {
+    async fn request(
+        &self,
+        agency_id: i32,
+        json_pointer: String,
+        auth_header: String,
+    ) -> Result<serde_json::Value, Error> {
+        let url = &self.get_url(agency_id).await?;
+        let auth = &self.get_auth(agency_id).await?;
+
         let client = reqwest::Client::new();
         let resp = client.post(url).header(auth_header, auth).send().await?;
-        
-        if resp.status() == StatusCode::OK {
-            let response = resp.json::<T>().await?;
-            Ok(response)
-            // todo: use json pointer stored in database to get data
-        }
-        else {
-            let response = resp.json::<T>().await?;
-            Ok(response)
+
+        let status = resp.status();
+        let response = resp.text().await?;
+        let json_value = serde_json::from_str::<serde_json::Value>(&response)?;
+        if status == StatusCode::OK {
+            let ptr = Pointer::parse(&json_pointer)?;
+            let data = ptr.resolve(&json_value)?;
+            Ok(data.clone())
+        } else {
+            Ok(json_value)
         }
     }
 
-    pub async fn build_url(&self, agency_id: i32) -> Result<String, Error> {
+    async fn get_url(&self, agency_id: i32) -> Result<String, Error> {
         let result = sqlx::query!(r#"SELECT api_url FROM agencies WHERE id = $1"#, agency_id)
             .fetch_one(&self.client.pool)
             .await?;
@@ -40,7 +49,7 @@ impl Api {
     }
 
     /// Get's the agency's API secret from the environment as specified by key_env_name in the database
-    pub async fn get_auth(&self, agency_id: i32) -> Result<String, Error> {
+    async fn get_auth(&self, agency_id: i32) -> Result<String, Error> {
         let result = sqlx::query!(
             r#"SELECT key_env_name FROM agencies WHERE id = $1"#,
             agency_id
@@ -71,7 +80,15 @@ impl Api {
             .client
             .get_json_pointer(agency_id, EndpointType::AllStations)
             .await?;
-        let built_url = self.build_url(agency_id).await?;
+        let auth_header = &self.client.get_agency_auth_header(agency_id).await?;
+
+        let result = self
+            .request(
+                agency_id,
+                endpoint_pointer.pointer_path,
+                auth_header.clone(),
+            )
+            .await?;
 
         Ok(())
     }

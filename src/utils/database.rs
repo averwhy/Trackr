@@ -59,7 +59,7 @@ impl Client {
             .map_err(|e| e.into())
         }
         .await;
-        let pool = get_pool.expect("Failed to setup Postgres on both an internal Docker network, and externally. Check database url(s)");
+        let pool = get_pool.expect("Failed to find Postgres on both the internal Docker network, and external network. Check database url(s)");
         span!(Level::INFO, "Postgres connected successfully");
         Ok(Self { pool })
     }
@@ -98,6 +98,20 @@ impl Client {
             .fetch_one(&self.pool)
             .await?;
         Ok(result.id)
+    }
+
+    /// Gets an agency's auth header name for making requests
+    pub async fn get_agency_auth_header(&self, agency_id: i32) -> Result<String, Error> {
+        let result = sqlx::query!(
+            r#"SELECT auth_header_name FROM agencies WHERE id = $1"#,
+            agency_id
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        result
+            .auth_header_name
+            .ok_or_else(|| Error::from("Agency has no auth header name"))
     }
 
     pub async fn get_json_pointer(

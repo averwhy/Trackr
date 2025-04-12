@@ -1,5 +1,3 @@
-use crate::utils::agencies::Agency;
-use crate::utils::tracking;
 use crate::{Context, Error};
 use poise::CreateReply;
 use serenity::builder::CreateEmbed;
@@ -7,6 +5,8 @@ use sqlx::types::chrono;
 use sqlx::{self, TypeInfo};
 use sqlx::{Column, Row};
 use tracing::{span, Level};
+
+use crate::utils::modals;
 
 /// Top level command for development commands. Owner only
 #[poise::command(
@@ -102,8 +102,28 @@ pub async fn sql(ctx: Context<'_>, #[rest] query: String) -> Result<(), Error> {
     Ok(())
 }
 
+/// Adds a transit agency to the database
 #[poise::command(prefix_command, owners_only, hide_in_help, category = "Dev")]
 pub async fn addagency(_ctx: Context<'_>) -> Result<(), Error> {
+    // When we add an agency, we need to add something to the following tables:
+    // agencies, endpoints, and endpoint_pointers
+    // We made 3 modals for those tables in utils/modals.rs
+    // We'll send a message with a button to start that process
+    let initial_embed = CreateEmbed::new()
+        .title("Agency Addition Tool")
+        .description("Click the button below to start adding an agency.\nEach form/component/button etc. has a timeout of 1 hour.");
+
+    let start_button = poise::serenity_prelude::CreateButton::new("add_agency_info_button")
+        .label("Add Agency Info")
+        .style(poise::serenity_prelude::ButtonStyle::Success);
+
+    //let components = poise::serenity_prelude::CreateActionRow::Buttons(); // todo figure this out
+
+    let initial_reply = CreateReply::default()
+        .embed(initial_embed);
+        //.components(start_button); // todo figure that out
+
+    
     Ok(())
 }
 

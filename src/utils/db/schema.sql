@@ -65,7 +65,6 @@ CREATE INDEX idx_endpoints_agency_id_endpoint_type ON endpoints (agency_id, endp
 CREATE TABLE endpoint_pointers (
     id SERIAL PRIMARY KEY,
     endpoint_id INT NOT NULL REFERENCES endpoints(id) ON DELETE CASCADE,
-    pointer_key VARCHAR(100) NOT NULL,
     pointer_path TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP

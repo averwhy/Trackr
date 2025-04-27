@@ -34,7 +34,8 @@ features = [
     "standard_framework",
     "rustls_backend",
     "interactions_endpoint",
-    "builder"
+    "builder",
+    "collector"
 ]
 
 [dependencies.tokio]

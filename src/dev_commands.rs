@@ -1,6 +1,8 @@
 use crate::{Context, Error};
 use poise::CreateReply;
 use serenity::builder::CreateEmbed;
+use serenity::builder::CreateActionRow;
+use serenity::collector::ComponentInteractionCollector;
 use sqlx::types::chrono;
 use sqlx::{self, TypeInfo};
 use sqlx::{Column, Row};
@@ -104,7 +106,7 @@ pub async fn sql(ctx: Context<'_>, #[rest] query: String) -> Result<(), Error> {
 
 /// Adds a transit agency to the database
 #[poise::command(prefix_command, owners_only, hide_in_help, category = "Dev")]
-pub async fn addagency(_ctx: Context<'_>) -> Result<(), Error> {
+pub async fn addagency(ctx: Context<'_>) -> Result<(), Error> {
     // When we add an agency, we need to add something to the following tables:
     // agencies, endpoints, and endpoint_pointers
     // We made 3 modals for those tables in utils/modals.rs
@@ -117,13 +119,13 @@ pub async fn addagency(_ctx: Context<'_>) -> Result<(), Error> {
         .label("Add Agency Info")
         .style(poise::serenity_prelude::ButtonStyle::Success);
 
-    //let components = poise::serenity_prelude::CreateActionRow::Buttons(); // todo figure this out
+    let action_row = CreateActionRow::Buttons(vec![start_button]);
 
     let initial_reply = CreateReply::default()
-        .embed(initial_embed);
-        //.components(start_button); // todo figure that out
+        .embed(initial_embed)
+        .components(vec![action_row]);
 
-    
+    //let collector = ComponentInteractionCollector::new();    
     Ok(())
 }
 

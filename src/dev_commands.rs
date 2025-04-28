@@ -1,7 +1,9 @@
 use crate::{Context, Error};
+use core::time;
+use poise::serenity_prelude::ReactionType;
 use poise::CreateReply;
-use serenity::builder::CreateEmbed;
 use serenity::builder::CreateActionRow;
+use serenity::builder::CreateEmbed;
 use serenity::collector::ComponentInteractionCollector;
 use sqlx::types::chrono;
 use sqlx::{self, TypeInfo};
@@ -111,21 +113,98 @@ pub async fn addagency(ctx: Context<'_>) -> Result<(), Error> {
     // agencies, endpoints, and endpoint_pointers
     // We made 3 modals for those tables in utils/modals.rs
     // We'll send a message with a button to start that process
-    let initial_embed = CreateEmbed::new()
+    let mut not_finished = true;
+    let mut added_agency = false;
+    let mut added_endpoints = false;
+
+    while not_finished {
+        let initial_embed = CreateEmbed::new()
         .title("Agency Addition Tool")
         .description("Click the button below to start adding an agency.\nEach form/component/button etc. has a timeout of 1 hour.");
 
-    let start_button = poise::serenity_prelude::CreateButton::new("add_agency_info_button")
-        .label("Add Agency Info")
-        .style(poise::serenity_prelude::ButtonStyle::Success);
+        let add_agency = poise::serenity_prelude::CreateButton::new("add_agency_info")
+            .label("Add Agency Info")
+            .style(if !added_agency {
+                // This is inverse bc its first
+                poise::serenity_prelude::ButtonStyle::Primary
+            } else {
+                poise::serenity_prelude::ButtonStyle::Secondary
+            })
+            .disabled(!added_agency);
 
-    let action_row = CreateActionRow::Buttons(vec![start_button]);
+        let endpoints = poise::serenity_prelude::CreateButton::new("add_endpoints")
+            .label("Add Endpoints")
+            .style(if added_agency {
+                poise::serenity_prelude::ButtonStyle::Primary
+            } else {
+                poise::serenity_prelude::ButtonStyle::Secondary
+            })
+            .disabled(added_agency);
 
-    let initial_reply = CreateReply::default()
-        .embed(initial_embed)
-        .components(vec![action_row]);
+        let pointers = poise::serenity_prelude::CreateButton::new("add_endpoint_pointer")
+            .label("Add Pointers for Endpoint")
+            .style(if added_endpoints {
+                poise::serenity_prelude::ButtonStyle::Primary
+            } else {
+                poise::serenity_prelude::ButtonStyle::Secondary
+            })
+            .disabled(added_endpoints);
 
-    //let collector = ComponentInteractionCollector::new();    
+        let cancel = poise::serenity_prelude::CreateButton::new("cancel").emoji('❌');
+
+        let action_row = CreateActionRow::Buttons(vec![add_agency, endpoints, pointers, cancel]);
+
+        let initial_reply = ctx
+            .send(
+                CreateReply::default()
+                    .embed(initial_embed)
+                    .components(vec![action_row]),
+            )
+            .await?;
+
+        let collector = ComponentInteractionCollector::new(ctx)
+            .timeout(time::Duration::new(3600, 0)) // 1 hour timeout
+            .message_id(initial_reply.message().await?.id)
+            .author_id(ctx.author().id);
+
+        let interaction_opt = collector.next().await;
+
+        if let Some(interaction) = interaction_opt {
+            match interaction.data.custom_id.as_str() {
+                "cancel" => {
+                    not_finished = false;
+                    if let Context::Prefix(ctx) = ctx {
+                        // Rust moment
+                        ctx.msg.react(ctx, '✅').await?;
+                    }
+                }
+
+                "add_agency_info" => {
+
+                }
+
+                "add_endpoints" => {
+
+                }
+
+                "add_endpoint_pointer" => {
+
+                }
+
+                _ => {
+                    // unknown button id WTF
+                    interaction.create_response(ctx, poise::serenity_prelude::CreateInteractionResponse::Acknowledge).await?;
+                    span!(Level:: ERROR, "Received unknown interaction: {}", interaction.data.custom_id);
+                }
+            }
+
+        } else {
+            // Timeout occurred (collector.next() returned None)
+            ctx.say("Agency addition timed out after 3600s.").await?;
+            initial_reply.delete(ctx).await?; // Clean up the message on timeout
+            not_finished = false; // Exit the loop on timeout
+        }
+    }
     Ok(())
 }
 

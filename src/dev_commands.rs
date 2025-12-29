@@ -179,25 +179,27 @@ pub async fn addagency(ctx: Context<'_>) -> Result<(), Error> {
                     }
                 }
 
-                "add_agency_info" => {
+                "add_agency_info" => {}
 
-                }
+                "add_endpoints" => {}
 
-                "add_endpoints" => {
-
-                }
-
-                "add_endpoint_pointer" => {
-
-                }
+                "add_endpoint_pointer" => {}
 
                 _ => {
                     // unknown button id WTF
-                    interaction.create_response(ctx, poise::serenity_prelude::CreateInteractionResponse::Acknowledge).await?;
-                    span!(Level:: ERROR, "Received unknown interaction: {}", interaction.data.custom_id);
+                    interaction
+                        .create_response(
+                            ctx,
+                            poise::serenity_prelude::CreateInteractionResponse::Acknowledge,
+                        )
+                        .await?;
+                    span!(
+                        Level::ERROR,
+                        "Received unknown interaction: {}",
+                        interaction.data.custom_id
+                    );
                 }
             }
-
         } else {
             // Timeout occurred (collector.next() returned None)
             ctx.say("Agency addition timed out after 3600s.").await?;
